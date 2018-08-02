@@ -1,0 +1,76 @@
+//=============================================================================
+// PTA_LevelSystem.js v0.1
+//=============================================================================
+
+Game_Actor.prototype.setup = function(actorId) {
+    var actor = $dataActors[actorId];
+    this._actorId = actorId;
+    this._name = actor.name;
+    this._nickname = actor.nickname;
+    this._profile = actor.profile;
+    this._classId = actor.classId;
+    this._levelclassId = [this._classId]
+    this._level = actor.initialLevel;
+    this.initImages();
+    this.initExp();
+    this.initSkills();
+    this.initEquips(actor.equips);
+    this.clearParamPlus();
+    this.recoverAll();
+};
+
+Game_BattlerBase.prototype.paramMax = function(paramId) {
+    if (paramId === 0) {
+        return 9999;  // MHP
+    } else if (paramId === 1) {
+        return 999;    // MMP
+    } else {
+        return 99;
+    }
+};
+
+Game_Actor.prototype.initSkills = function() {
+    this._skills = [];
+    this.calcClassSkills();
+};
+
+Game_Actor.prototype.calcClassSkills = function() {
+    for(var i = 0; i < this._level; i++){
+    	if (!this._levelclassId[i]) break
+    		var cls = $dataClasses[this._levelclassId[i]]
+    	cls.learnings.forEach(function(learning) {
+    		console.log(i)
+    		if (learning.level == i+1) {
+    			this.learnSkill(learning.skillId);
+    		}
+    	}, this);
+    }
+};
+
+Game_Actor.prototype.paramMax = function(paramId) {
+    if (paramId === 0) {
+        return 999;    // MHP
+    }
+    return Game_Battler.prototype.paramMax.call(this, paramId);
+};
+
+Game_Actor.prototype.paramBase = function(paramId) {
+	var value = 0
+	for(var i = 0; i < this._level; i++){
+		if (!this._levelclassId[i]) break
+		var ci = this._levelclassId[i]
+		value += $dataClasses[ci].params[paramId][i+1]
+	}
+	return value
+};
+
+Game_Actor.prototype.levelUp = function() {
+    this._level++;
+    this.calcClassSkills();
+};
+
+
+Game_Actor.prototype.classlevelUp = function(classId) {
+    this._levelclassId.push(classId);
+    this.levelUp();
+};
